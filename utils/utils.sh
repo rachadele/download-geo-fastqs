@@ -37,11 +37,14 @@ function get_srr_accessions() {
 }
 
 function download_fastqs() {
+    #can't be run in directory where files are being donwloaded becuase prefetch will have a seizure
     local GSE=$1
     local SRR=$2
     local output_dir="/hive/data/outside/geo/$GSE/$SRR"
     local log="${output_dir}/log"
-    ~/sratoolkit.2.11.0-ubuntu64/bin/prefetch $SRR --max-size 900GB --output-directory $output_dir &> $log
+    mkdir -p "$output_dir"
+    ~/sratoolkit.2.11.0-ubuntu64/bin/prefetch $SRR --max-size 900GB --output-directory $output_dir &> $log 
+    #potentially change log name to $SRR.log in parent directory /geo/$GSE to help with missing SRR download?
     echo "prefetched SRA file for $SRR"
 
     ~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump $SRR --include-technical -S -t $output_dir -O $output_dir &>> $log
