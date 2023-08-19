@@ -45,7 +45,7 @@ function download_fastqs() {
     #make directory if it doesn't exist yet
     mkdir -p "$output_dir"
     ~/sratoolkit.2.11.0-ubuntu64/bin/prefetch $SRR --max-size 900GB --output-directory $output_dir &> $log 
-    #potentially change log name to $SRR.log in parent directory /geo/$GSE to help with missing SRR download?
+    #potentially change log name to /hive/data/outside/geo/$GSE/SRR.log to help with missing SRR download?
     echo "prefetched SRA file for $SRR"
 
     ~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump $SRR --include-technical -S -t $output_dir -O $output_dir &>> $log
