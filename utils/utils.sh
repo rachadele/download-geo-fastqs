@@ -49,10 +49,10 @@ function download_fastqs() {
     echo "prefetched SRA file for $SRR"
 
     ~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump $SRR --include-technical -S -t $output_dir -O $output_dir &>> $log
-    gzip "$output_dir/*fastq*" &>> $log
+    gzip "$output_dir/"*fastq* &>> $log
     echo "FASTqs downloaded and gzipped for $SRR"
 
-    rm -r "$output_dir/*.sra"
+    rm -r "$output_dir/"*.sra
     echo "removing SRA files for $SRR"
 }
 
