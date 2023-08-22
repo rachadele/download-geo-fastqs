@@ -21,19 +21,45 @@ function download_miniml_file() {
 function get_srr_accessions() {
     local GSE=$1
     local output_dir="/hive/data/outside/geo/$GSE"
+    mkdir -p "$output_dir"
     local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
 
     if [ -z "$srp_accessions" ]; then
        # echo "No SRP accessions found for the provided GSE accession: $GSE"
         download_miniml_file "$GSE"
-        local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-        local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
-    else
-       local srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
+        #check for subseries in the MINiML file for the given accession
+        subseries=$(grep "SuperSeries of" ${GSE}_family.xml | grep -oP '(?<=target=")GSE[0-9]+')
+        #if the subseries object is empty
+        if [[ -z $subseries ]]; then 
+	        echo "No SubSeries found" 
+            local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+            local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+            echo "$srr_accessions" >> "{$output_dir}_Acc_list.txt"
+        else #subseries found in MINiML file
+	        echo "the SuperSeries $GSE contains SubSeries $(echo -n $subseries)"; 
+	        for accession in $subseries; do
+                subdir="/hive/data/outside/geo/$GSE/$subseries"
+                mkdir -p $subdir
+                cd $subdir
+	            download_miniml_file "$accession"
+                local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+                local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+                echo "$srr_accessions" >> "{$subdir}_Acc_list.txt"
+                cd ..
+                done #download MINiML file for each subseries
+            fi
+        #rm *gz #remove gzipped MINiML files
+        #extract supplementary links from each MINiML file and download using wget
+        #for miniml_file in *.xml; do
+        #    local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+        #    local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+        else
+           local srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
     
     #return srr accessions
-    echo "$srr_accessions"
-    fi
+            echo "$srr_accessions"
+            echo "$srr_accessions" >> "{$output_dir}_Acc_list.txt"
+            fi
 }
 
 function download_fastqs() {
@@ -128,4 +154,28 @@ function rename_bams() {
     echo "file rename complete"
 }
 
-export -f *
+function donwload_supp_files() {
+    GSE=$1
+    #pass the GEO accession to the download function to download MINiML file
+    download_miniml_file $GSE
+    #check for subseries in the MINiML file for the given accession
+    subseries=$(grep "SuperSeries of" ${GSE}_family.xml | grep -oP '(?<=target=")GSE[0-9]+')
+    #if the subseries object is empty
+    if [[ -z $subseries ]]; then 
+	    echo "No SubSeries found" 
+    else #subseries found in MINiML file
+	    echo "the SuperSeries $GSE contains SubSeries $(echo -n $subseries)"; 
+	for accession in $subseries; do
+	    download_miniml_file "$accession"; done #download MINiML file for each subseries
+    fi
+    rm *gz #remove gzipped MINiML files
+    #extract supplementary links from each MINiML file and download using wget
+    for miniml_file in *.xml; do
+	    urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' $miniml_file))
+	    for url in "${urls[@]}"; do
+	    	wget "$url"
+	    done
+    done
+    rm *xml #remove MINiML files
+
+#export -f *
