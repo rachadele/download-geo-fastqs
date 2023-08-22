@@ -21,6 +21,7 @@ function download_miniml_file() {
 function get_srr_accessions() {
     local GSE=$1
     local output_dir="/hive/data/outside/geo/$GSE"
+    mkdir -p "$output_dir"
     local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
 
     if [ -z "$srp_accessions" ]; then
