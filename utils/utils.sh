@@ -18,6 +18,53 @@ function download_miniml_file() {
     fi
 }
 
+function check_for_subseries() {
+	GSE=$1
+    #pass the GEO accession to the download function to download MINiML file
+    download_miniml_file $GSE
+    #check for subseries in the MINiML file for the given accession
+    subseries=$(grep "SuperSeries of" ${GSE}_family.xml | grep -oP '(?<=target=")GSE[0-9]+')
+    #if the subseries object is empty
+    if [[ -z $subseries ]]; then 
+	    echo "No SubSeries found"
+    else #subseries found in MINiML file
+	    echo "the SuperSeries $GSE contains SubSeries $(echo -n $subseries)";
+	return $subseries
+ 
+function download_supp_files() {
+	local output_dir="/hive/data/outside/geo/$GSE/"
+ 	mkdir -p $output_dir
+    GSE=$1
+    #pass the GEO accession to the download function to download MINiML file
+    download_miniml_file $GSE
+    #check for subseries in the MINiML file for the given accession
+    local subseries=$(check_for_subseries $GSE)
+    #if the subseries object is empty
+    if [[ -z $subseries ]]; then #if subseries check returns empty string
+		cd $output_dir
+	 	download_miniml_file $GSE
+   		urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' *.xml ))
+		for url in "${urls[@]}"; do
+			wget "$url"
+   		rm *xml.gz #remove gzipped MINiML files
+   		cd ..
+		done
+    else #subseries found in MINiML file
+	   # echo "the SuperSeries $GSE contains SubSeries $(echo -n $subseries)"; 
+		for accession in $subseries; do
+ 			local subdir="/hive/data/outside/geo/$GSE/$accession"
+    		mkdir -p $subdir
+	 		cd $subdir
+    		#local output_file="$output_dir/${GSE}_ac_list.txt"
+	    	download_miniml_file "$accession" #download MINiML file for each subseries
+	 		urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' *.xml))  #extract supplementary links from MINiML file and download using wget
+	    	for url in "${urls[@]}"; do
+	    		wget "$url"
+	   		rm *xml.gz #remove gzipped MINiML files
+	   		cd ..
+	    	done
+    	fi
+
 function get_srr_accessions() {
     local GSE=$1
     local output_dir="/hive/data/outside/geo/$GSE"
@@ -131,28 +178,4 @@ function rename_bams() {
     echo "file rename complete"
 }
 
-function donwload_supp_files() {
-    GSE=$1
-    #pass the GEO accession to the download function to download MINiML file
-    download_miniml_file $GSE
-    #check for subseries in the MINiML file for the given accession
-    subseries=$(grep "SuperSeries of" ${GSE}_family.xml | grep -oP '(?<=target=")GSE[0-9]+')
-    #if the subseries object is empty
-    if [[ -z $subseries ]]; then 
-	    echo "No SubSeries found" 
-    else #subseries found in MINiML file
-	    echo "the SuperSeries $GSE contains SubSeries $(echo -n $subseries)"; 
-	for accession in $subseries; do
-	    download_miniml_file "$accession"; done #download MINiML file for each subseries
-    fi
-    rm *gz #remove gzipped MINiML files
-    #extract supplementary links from each MINiML file and download using wget
-    for miniml_file in *.xml; do
-	    urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' $miniml_file))
-	    for url in "${urls[@]}"; do
-	    	wget "$url"
-	    done
-    done
-    #rm *xml #remove MINiML files
-
-#export -f *
+export -f *
