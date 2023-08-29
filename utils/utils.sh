@@ -1,11 +1,10 @@
 #!/bin/bash
 
-
 function download_miniml_file() {
     local GSE=$1
     local stub="${GSE%???}nnn" # Replace the last three characters of the accession with "nnn"
-    local url="https://ftp.ncbi.nlm.nih.gov/geo/series/$stub/$accession/miniml/$accession""_family.xml.tgz"
-    output_file="${GSE}_family.xml.tgz"
+    local url="https://ftp.ncbi.nlm.nih.gov/geo/series/$stub/$GSE/miniml/$GSE""_family.xml.tgz"
+    local output_file="${GSE}_family.xml.tgz"
     echo "Downloading MINiML file for accession $GSE..."
     curl -OJL "$url"
 
@@ -21,19 +20,21 @@ function download_miniml_file() {
 function get_srr_accessions() {
     local GSE=$1
     local output_dir="/hive/data/outside/geo/$GSE"
+    #mkdir -p $output_dir
     local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
-
+	local srr_accessions
     if [ -z "$srp_accessions" ]; then
-       # echo "No SRP accessions found for the provided GSE accession: $GSE"
+        echo "No SRP accessions found for the provided GSE accession: $GSE"
         download_miniml_file "$GSE"
-        local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-        local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
-    else
-       local srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
-    
+        srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+        srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+    #	echo $srr_accessions
+	else
+       srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
+    fi 
     #return srr accessions
-    echo "$srr_accessions"
-    fi
+    echo $srr_accessions
+    
 }
 
 function download_fastqs() {
@@ -52,16 +53,16 @@ function download_fastqs() {
     gzip "$output_dir/"*fastq* &>> $log
     echo "FASTqs downloaded and gzipped for $SRR"
 
-    rm -r "$output_dir/"*.sra
+    rm -r "$output_dir/$SRR/$SRR/"*.sra
     echo "removing SRA files for $SRR"
 }
 
 function check_fastq_downloads() {
     local GSE=$1
-    local expected_srrs=$(get_srr_accessions "$GSE")
+    local result=$(get_srr_accessions "$GSE")
+    local expected_srrs=$(echo $result | grep -o 'SRR[0-9]\+')
     local output_dir="/hive/data/outside/geo/$GSE" 
     local missing_srrs=""
-
     for srr in $expected_srrs; do
         if [[ ! -d "$output_dir/$srr" ]]; then
             missing_srrs="$missing_srrs $srr"
@@ -76,22 +77,23 @@ function check_fastq_downloads() {
 }
 
 function rename_10x() {
+    #doesn't work if r1 and r2 are same length (both 150)
+    #insert check for poly a tail
     local file_path="$1"
     local read_length=$(zcat "$file_path" | head -n 2 | tail -n 1 | awk '{print length($0)}')
     local base_name=$(basename "$file_path" .fastq.gz)
-    
+		base_name="${base_name%%_[0-9]*}"
     if [[ $read_length -eq 8 ]]; then
         new_name="${base_name}_I1.fastq.gz"
     elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
         new_name="${base_name}_R1.fastq.gz"
-    elif [[ $read_length -eq 98 ]]; then
-        new_name="${base_name}_R2.fastq.gz"
+    elif [[ $read_length -ge 90 ]]; then
+	new_name="${base_name}_R2.fastq.gz"
     else
         echo "Unknown read length for file: $file_path"
         return
     fi
-    
-    mv "$file_path" "$(dirname "$file_path")/$new_name"
+		mv "$file_path" "$(dirname "$file_path")/$new_name"    
 }
 
 function rename_SS2() {
@@ -128,4 +130,7 @@ function rename_bams() {
     echo "file rename complete"
 }
 
-export -f *
+#export -f *
+#if [ $# -eq 1 ]; then
+ #   "$1"
+  #  fi
