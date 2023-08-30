@@ -15,17 +15,16 @@ function download_miniml_file() {
     else
         echo "Failed to download MINiML file for accession $GSE."
     fi
+
 }
 
 function get_srr_accessions() {
     local GSE=$1
-    local output_dir="/hive/data/outside/geo/$GSE"
     #mkdir -p $output_dir
     local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
 	local srr_accessions
     if [ -z "$srp_accessions" ]; then
         echo "No SRP accessions found for the provided GSE accession: $GSE"
-        download_miniml_file "$GSE"
         srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
         srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
     	echo $srr_accessions
@@ -130,7 +129,49 @@ function rename_bams() {
     echo "file rename complete"
 }
 
-#export -f *
-#if [ $# -eq 1 ]; then
- #   "$1"
-  #  fi
+function has_subseries() {
+	local xml_file="$1"
+	local subseries
+	subseries=$(grep "SuperSeries of" "$xml_file" | grep -oP '(?<=target=")GSE[0-9]+')
+	if [[ -z $subseries ]]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+function download_supp_files() {
+    local GSE="$1"
+	local subseries
+	local output_dir="/hive/data/outside/geo/$GSE"
+	mkdir -p $output_dir
+	
+	if [ ! -f "$output_dir/${GSE}_family.xml" ]; then cd $output_dir; download_miniml_file "$GSE"; cd ..; fi
+	if has_subseries ${GSE}_family.xml; then
+		subseries=$(grep "SuperSeries of" ${GSE}_family.xml | grep -oP '(?<=target=")GSE[0-9]+')
+		echo "The SuperSeries $GSE contains SubSeries: $(echo -n $subseries)"
+		for sub_accession in $subseries; do
+			local sub_dir="$output_dir/$sub_accession"
+			mkdir -p "$sub_dir"
+			cd $sub_dir
+			download_miniml_file "$sub_accession"
+			echo $sub_accession $sub_dir
+			for miniml_file in "$sub_dir"/*xml; do
+				urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' "$miniml_file"))
+				for url in "${urls[@]}"; do
+					wget -P "$sub_dir" "$url"
+				done
+			cd .. 
+			done
+		done
+	fi
+	for miniml_file in "$output_dir"/*.xml; do
+		urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' "$miniml_file"))
+		for url in "${urls[@]}"; do
+			wget -P "$output_dir" "$url"
+		done			
+	done
+	find "$output_dir" -type f -name '*.xml.tgz' -exec rm {} \;
+	echo "Removed gzipped XML files"
+}
+
