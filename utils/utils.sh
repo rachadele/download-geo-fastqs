@@ -33,7 +33,6 @@ function download_fastqs() {
  	local output_dir="/hive/data/outside/geo/$GSE"
     #make parent directory if it doesn't exist yet
 	mkdir -p $output_dir
- 	echo "downloading FASTqs for $GSE"
 	for line in "${accessions[@]}"; do
  		#line represents SRR accession
     		local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
