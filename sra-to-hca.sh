@@ -18,6 +18,7 @@ function process_fastqs() {
 	acc=$(get_srr_accessions $GSE | grep SRR[0-9])
  	echo $acc
 	export -f download_fastqs
+ 	echo "downloading FASTqs"
 	parallel -j4 download_fastqs $GSE ::: ${acc[@]}
  
  	while true; do
@@ -27,7 +28,7 @@ function process_fastqs() {
     			break
 		else
        		#srrs=$(echo "$output" | grep -o 'SRR[0-9]\+')
-			parallel -j4 download_fastqs {} ::: "${missing_srrs[@]}"
+			parallel -j4 download_fastqs $GSE ::: "${missing_srrs[@]}"
    		fi
     done
 }
@@ -80,7 +81,6 @@ function main() {
 	if [ "$process_bam" -eq 1 ]; then skip_fastq=1; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
 	for GSE in "${GSEs[@]}"; do
 		if [ "$skip_fastq" -eq 0 ]; then
-			echo "Processing FASTQs for $GSE"
 			process_fastqs "$GSE"
 		fi
 		if [ "$process_bam" -eq 1 ]; then
