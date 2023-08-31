@@ -27,6 +27,8 @@ function process_fastqs() {
 		else
        		#srrs=$(echo "$output" | grep -o 'SRR[0-9]\+')
 			parallel -j4 download_fastqs {} ::: "${missing_srrs[@]}"
+   		fi
+    done
 }
 
 function process_bams() {
