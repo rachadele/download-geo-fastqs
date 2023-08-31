@@ -52,7 +52,7 @@ function download_fastqs() {
     gzip "$output_dir/"*fastq* &>> $log
     echo "FASTqs downloaded and gzipped for $SRR"
 
-    rm -r "$output_dir/$SRR/$SRR/"*.sra
+    rm -r "$output_dir/$SRR/"*.sra
     echo "removing SRA files for $SRR"
 }
 
@@ -75,39 +75,73 @@ function check_fastq_downloads() {
     fi
 }
 
+function download_missing_srrs() {
+	#need this to be a separate function from initial download bc sra can't handle feeding srrs back into initial donwload loop
+	#reasons not entirely clear not me
+	local GSE="$1"
+	shift
+	local accessions=("$@")
+	for line in "${accessions[@]}"; do
+		~/sratoolkit.2.11.0-ubuntu64/bin/prefetch "$line" --max-size 900GB -O "/hive/data/outside/geo/$GSE" &> "/hive/data/outside/geo/$GSE/$line.log"
+		echo "Prefetched SRA file for $line"
+
+		# Download and gzip FASTQs
+		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "/hive/data/outside/geo/$GSE/$line" -O "/hive/data/outside/geo/$GSE/$line" &>> "/hive/data/outside/geo/$GSE/$line.log"
+		gzip "/hive/data/outside/geo/$GSE/$line"/*fastq* &>> "/hive/data/outside/geo/$GSE/$line/$line.log"
+		echo "FASTQs downloaded and gzipped for $line"
+
+		rm -r "/hive/data/outside/geo/$GSE"/*/*sra
+		echo "Removed SRA files for $line"
+	 done
+
+}
+
 function rename_10x() {
-    #doesn't work if r1 and r2 are same length (both 150)
-    #insert check for poly a tail
-    local file_path="$1"
-    local read_length=$(zcat "$file_path" | head -n 2 | tail -n 1 | awk '{print length($0)}')
-    local base_name=$(basename "$file_path" .fastq.gz)
-		base_name="${base_name%%_[0-9]*}"
-    if [[ $read_length -eq 8 ]]; then
-        new_name="${base_name}_I1.fastq.gz"
-    elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
-        new_name="${base_name}_R1.fastq.gz"
-    elif [[ $read_length -ge 90 ]]; then
-	new_name="${base_name}_R2.fastq.gz"
-    else
-        echo "Unknown read length for file: $file_path"
-        return
-    fi
-		mv "$file_path" "$(dirname "$file_path")/$new_name"    
+   echo "test"
+   local GSE="$1"
+	for file_path in "/hive/data/outside/geo/$GSE/"SRR[0-9]*/*.fastq.gz; do
+		echo $file_path
+		if [ -f "$file_path" ]; then
+			local read_length=$(zcat "$file_path" | head -n 2 | tail -n 1 | awk '{print length($0)}')
+			local base_name=$(basename "$file_path" .fastq.gz)
+			base_name="${base_name%%_[0-9]*}"
+			if [[ $(zcat "$file_path" | head -n 4 | sed -n '2p' | grep -o 'A\{100,\}') ]]; then	
+				echo "found polyA tail, assuming technical barcode read 1"
+				new_name="${base_name}_R1.fastq.gz"
+			else
+	   			if [[ $read_length -eq 8 ]]; then
+        			new_name="${base_name}_I1.fastq.gz"
+    			elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
+        			new_name="${base_name}_R1.fastq.gz"
+    			elif [[ $read_length -ge 90 ]]; then
+					new_name="${base_name}_R2.fastq.gz"
+    			else
+        			echo "Unknown read length for file: $file_path"
+        			continue
+    			fi
+			fi
+			mv "$file_path" "$(dirname "$file_path")/$new_name"
+		else 
+			echo "file path not found"
+		fi
+	done
 }
 
 function rename_SS2() {
-    local input_dir="$1"
-    
-    find "$input_dir" -type f -name "*.fastq.gz" | while read filename; do
-        base=$(basename "$filename")
-        if [[ $base =~ _1\.fastq\.gz$ ]]; then
-            new_name="${base/_1.fastq.gz/_R1.fastq.gz}"
-            mv "$filename" "$input_dir/$new_name"
-        elif [[ $base =~ _2\.fastq\.gz$ ]]; then
-            new_name="${base/_2.fastq.gz/_R2.fastq.gz}"
-            mv "$filename" "$input_dir/$new_name"
-        fi
-    done
+   local GSE="$1"
+   for file_path in "/hive/data/outside/geo/$GSE/"SRR[0-9]*/*.fastq.gz; do
+        if [ -f "$file_path" ]; then
+			local base=$(basename "$filename")
+        	if [[ $base =~ _1\.fastq\.gz$ ]]; then
+            	new_name="${base/_1.fastq.gz/_R1.fastq.gz}"
+            	mv "$file_path" "$(dirname "$file_path")/$new_name"
+        	
+			elif [[ $base =~ _2\.fastq\.gz$ ]]; then
+            	new_name="${base/_2.fastq.gz/_R2.fastq.gz}"
+				mv "$file_path" "$(dirname "$file_path")/$new_name"
+			fi
+    	fi
+	done
 }
 
 function download_bams() {
