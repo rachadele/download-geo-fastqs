@@ -20,20 +20,11 @@ function download_miniml_file() {
 
 function get_srr_accessions() {
     local GSE=$1
-    #mkdir -p $output_dir
-    local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
 	local srr_accessions
-    if [ -z "$srp_accessions" ]; then
-        echo "No SRP accessions found for the provided GSE accession: $GSE"
-        srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-        srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
-    	echo $srr_accessions
-    else
-        srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
-	echo $srr_accessions
-    fi 
+    srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+    srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+    echo $srr_accessions
     #return srr accessions
-    
 }
 
 function download_fastqs() {
