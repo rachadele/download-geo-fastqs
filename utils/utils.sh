@@ -45,7 +45,7 @@ function download_fastqs() {
 	mkdir -p $output_dir
 	for line in "${accessions[@]}"; do
  		#line represents SRR accession
-    	local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
+    		local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
 		~/sratoolkit.2.11.0-ubuntu64/bin/prefetch "$line" --max-size 900GB -O $output_dir &> $log 
   		#prefetch will automatically create a subdirectory in $output_dir for given SRR
 		#if this directory is manually created before prefetch is run it may error out
@@ -53,7 +53,7 @@ function download_fastqs() {
 		# Download and gzip FASTQs
 		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "$output_dir/$line" -O "$output_dir/$line" &>> $log
 		gzip "$output_dir/$line"*fastq* &>> $log
-		echo "FASTQs downloaded and gzipped for $line
+		echo "FASTQs downloaded and gzipped for $line"
   		#remove sra file
 		rm -r $output_dir/$line/$line/*sra
 		echo "Removed SRA files for $line"
