@@ -37,23 +37,27 @@ function get_srr_accessions() {
 }
 
 function download_fastqs() {
-    #can't be run in directory where files are being downloaded becuase prefetch will have a seizure
     local GSE=$1
-    local SRR=$2
-    local output_dir="/hive/data/outside/geo/$GSE/$SRR"
-    local log="${output_dir}/log"
-    #make directory if it doesn't exist yet
-    mkdir -p "$output_dir"
-    ~/sratoolkit.2.11.0-ubuntu64/bin/prefetch $SRR --max-size 900GB --output-directory $output_dir &> $log 
-    #potentially change log name to /hive/data/outside/geo/$GSE/SRR.log to help with missing SRR download?
-    echo "prefetched SRA file for $SRR"
-
-    ~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump $SRR --include-technical -S -t $output_dir -O $output_dir &>> $log
-    gzip "$output_dir/"*fastq* &>> $log
-    echo "FASTqs downloaded and gzipped for $SRR"
-
-    rm -r "$output_dir/$SRR/"*.sra
-    echo "removing SRA files for $SRR"
+    shift
+	local accessions=("$@")
+ 	local output_dir="/hive/data/outside/geo/$GSE/"
+    #make parent directory if it doesn't exist yet
+	mkdir -p $output_dir
+	for line in "${accessions[@]}"; do
+ 		#line represents SRR accession
+    	local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
+		~/sratoolkit.2.11.0-ubuntu64/bin/prefetch "$line" --max-size 900GB -O $output_dir &> $log 
+  		#prefetch will automatically create a subdirectory in $output_dir for given SRR
+		#if this directory is manually created before prefetch is run it may error out
+		echo "Prefetched SRA file for $line"
+		# Download and gzip FASTQs
+		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "$output_dir/$line" -O "$output_dir/$line" &>> $log
+		gzip "$output_dir/$line"*fastq* &>> $log
+		echo "FASTQs downloaded and gzipped for $line
+  		#remove sra file
+		rm -r $output_dir/$line/$line/*sra
+		echo "Removed SRA files for $line"
+	 done
 }
 
 function check_fastq_downloads() {
@@ -208,4 +212,5 @@ function download_supp_files() {
 	find "$output_dir" -type f -name '*.xml.tgz' -exec rm {} \;
 	echo "Removed gzipped XML files"
 }
+
 
