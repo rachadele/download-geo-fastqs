@@ -18,12 +18,15 @@ function process_fastqs() {
 	acc=$(get_srr_accessions $GSE | grep SRR[0-9])
 	export -f download_fastqs
 	parallel -j4 download_fastqs $GSE ::: ${acc[@]}
-	local missing_srrs=$(check_fastq_downloads GSE165577)
- 	if [[ -z "$missing_srrs" ]]; then
-  		echo "All fastqs for GSE $GSE have been downloaded."
-	else
-       	#srrs=$(echo "$output" | grep -o 'SRR[0-9]\+')
-		parallel -j4 download_fastqs {} ::: "${missing_srrs[@]}"
+ 
+ 	while true; do
+		local missing_srrs=$(check_fastq_downloads GSE165577)
+ 		if [[ -z "$missing_srrs" ]]; then
+  			echo "All fastqs for GSE $GSE have been downloaded."
+    		break
+		else
+       		#srrs=$(echo "$output" | grep -o 'SRR[0-9]\+')
+			parallel -j4 download_fastqs {} ::: "${missing_srrs[@]}"
 }
 
 function process_bams() {
