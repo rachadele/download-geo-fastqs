@@ -74,14 +74,23 @@ function main() {
 	
 	local GSEs=("$@")
 	if [ $# -eq 0 ]; then
-	    echo "Usage: $0 -s -b GSE1 GSE2 ..."
+	    echo "Usage: $0 -s -b -r 10x GSE1 GSE2 ..."
 	    exit 1
 	fi
-	if [ "$process_bam" -eq 1 ]; then skip_fastq=1; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
+	if [ "$process_bam" -eq 1 ]; then skip_fastq=1; rename_mode=""; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
 	for GSE in "${GSEs[@]}"; do
 		if [ "$skip_fastq" -eq 0 ]; then
 			process_fastqs "$GSE"
 		fi
+  		#rename fastqs according to library method if applicable
+  		if [ "$rename_mode"="10x" ]; then
+     			rename_10x $GSE
+		fi
+		if [ "$rename_mode"="ss2" ]; then
+     			rename_SS2 $GSE
+		fi
+  		#process bams instead of FASTQs
+    		#potentially write a function to detect if original format is bam
 		if [ "$process_bam" -eq 1 ]; then
 			echo "Processing BAMs for $GSE"	
 			process_bams "$GSE"
