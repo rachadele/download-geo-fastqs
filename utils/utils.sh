@@ -20,9 +20,8 @@ function download_miniml_file() {
 
 function get_srr_accessions() {
     local GSE=$1
-	local srr_accessions
-    srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-    srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+ 	local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+   	local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
     echo $srr_accessions
     #return srr accessions
 }
@@ -34,6 +33,7 @@ function download_fastqs() {
  	local output_dir="/hive/data/outside/geo/$GSE"
     #make parent directory if it doesn't exist yet
 	mkdir -p $output_dir
+ 	echo "downloading FASTqs for $GSE"
 	for line in "${accessions[@]}"; do
  		#line represents SRR accession
     		local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
