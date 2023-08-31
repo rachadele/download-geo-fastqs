@@ -71,12 +71,7 @@ function check_fastq_downloads() {
             missing_srrs="$missing_srrs $srr"
         fi
     done
-
-    if [[ -z "$missing_srrs" ]]; then
-        echo "All fastqs for GSE $GSE have been downloaded."
-    else
-        echo "Missing fastqs for GSE $GSE: $missing_srrs"
-    fi
+	echo "$missing_srrs"
 }
 
 function download_missing_srrs() {
