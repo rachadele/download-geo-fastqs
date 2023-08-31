@@ -40,7 +40,7 @@ function download_fastqs() {
     local GSE=$1
     shift
 	local accessions=("$@")
- 	local output_dir="/hive/data/outside/geo/$GSE/"
+ 	local output_dir="/hive/data/outside/geo/$GSE"
     #make parent directory if it doesn't exist yet
 	mkdir -p $output_dir
 	for line in "${accessions[@]}"; do
@@ -52,10 +52,10 @@ function download_fastqs() {
 		echo "Prefetched SRA file for $line"
 		# Download and gzip FASTQs
 		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "$output_dir/$line" -O "$output_dir/$line" &>> $log
-		gzip "$output_dir/$line"*fastq* &>> $log
+		gzip "$output_dir/$line"/*fastq* &>> $log
 		echo "FASTQs downloaded and gzipped for $line"
   		#remove sra file
-		rm -r $output_dir/$line/$line/*sra
+		find "$output_dir/$line" -type f -name "*.sra" -exec rm {} \;
 		echo "Removed SRA files for $line"
 	 done
 }
