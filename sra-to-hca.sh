@@ -16,9 +16,8 @@ function process_fastqs() {
 		exit 1
 	fi
 	acc=$(get_srr_accessions $GSE | grep SRR[0-9])
- 	echo $acc
 	export -f download_fastqs
- 	echo "downloading FASTqs"
+ 	echo "downloading FASTQs for $GSE"
 	parallel -j4 download_fastqs $GSE ::: ${acc[@]}
  
  	while true; do
