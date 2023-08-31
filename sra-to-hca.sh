@@ -76,13 +76,13 @@ function main() {
 	    echo "Usage: $0 -s -b GSE1 GSE2 ..."
 	    exit 1
 	fi
-	if [ "$download_bam" -eq 1 ]; then skip_fastq=1; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
+	if [ "$process_bam" -eq 1 ]; then skip_fastq=1; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
 	for GSE in "${GSEs[@]}"; do
 		if [ "$skip_fastq" -eq 0 ]; then
 			echo "Processing FASTQs for $GSE"
 			process_fastqs "$GSE"
 		fi
-		if [ "$download_bam" -eq 1 ]; then
+		if [ "$process_bam" -eq 1 ]; then
 			echo "Processing BAMs for $GSE"	
 			process_bams "$GSE"
 		fi
