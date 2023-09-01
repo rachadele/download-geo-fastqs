@@ -20,40 +20,34 @@ function download_miniml_file() {
 
 function get_srr_accessions() {
     local GSE=$1
-    #mkdir -p $output_dir
-    local srp_accessions=$(pysradb gse-to-srp "$GSE" | tail -n +2 | awk '{print $2}')
-	local srr_accessions
-    if [ -z "$srp_accessions" ]; then
-        echo "No SRP accessions found for the provided GSE accession: $GSE"
-        srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-        srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
-    	echo $srr_accessions
-    else
-        srr_accessions=$(echo "$srp_accessions" | xargs -n 1 pysradb srp-to-srr | awk '{print $2}' | grep -v "run*")
-	echo $srr_accessions
-    fi 
+ 	local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
+   	local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+    echo $srr_accessions
     #return srr accessions
-    
 }
 
 function download_fastqs() {
-    #can't be run in directory where files are being downloaded becuase prefetch will have a seizure
     local GSE=$1
-    local SRR=$2
-    local output_dir="/hive/data/outside/geo/$GSE/$SRR"
-    local log="${output_dir}/log"
-    #make directory if it doesn't exist yet
-    mkdir -p "$output_dir"
-    ~/sratoolkit.2.11.0-ubuntu64/bin/prefetch $SRR --max-size 900GB --output-directory $output_dir &> $log 
-    #potentially change log name to /hive/data/outside/geo/$GSE/SRR.log to help with missing SRR download?
-    echo "prefetched SRA file for $SRR"
-
-    ~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump $SRR --include-technical -S -t $output_dir -O $output_dir &>> $log
-    gzip "$output_dir/"*fastq* &>> $log
-    echo "FASTqs downloaded and gzipped for $SRR"
-
-    rm -r "$output_dir/$SRR/"*.sra
-    echo "removing SRA files for $SRR"
+    shift
+	local accessions=("$@")
+ 	local output_dir="/hive/data/outside/geo/$GSE"
+    #make parent directory if it doesn't exist yet
+	mkdir -p $output_dir
+	for line in "${accessions[@]}"; do
+ 		#line represents SRR accession
+    		local log="$output_dir/$line.log" #log can't be in subdirectory bc it gets written before /hive/data/outside/geo/$GSE/$line is created
+		~/sratoolkit.2.11.0-ubuntu64/bin/prefetch "$line" --max-size 900GB -O $output_dir &> $log 
+  		#prefetch will automatically create a subdirectory in $output_dir for given SRR
+		#if this directory is manually created before prefetch is run it may error out
+		echo "Prefetched SRA file for $line"
+		# Download and gzip FASTQs
+		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "$output_dir/$line" -O "$output_dir/$line" &>> $log
+		gzip "$output_dir/$line"/*fastq* &>> $log
+		echo "FASTQs downloaded and gzipped for $line"
+  		#remove sra file
+		find "$output_dir/$line" -type f -name "*.sra" -exec rm {} \;
+		echo "Removed SRA files for $line"
+	 done
 }
 
 function check_fastq_downloads() {
@@ -67,12 +61,7 @@ function check_fastq_downloads() {
             missing_srrs="$missing_srrs $srr"
         fi
     done
-
-    if [[ -z "$missing_srrs" ]]; then
-        echo "All fastqs for GSE $GSE have been downloaded."
-    else
-        echo "Missing fastqs for GSE $GSE: $missing_srrs"
-    fi
+	  echo "$missing_srrs"
 }
 
 function rename_10x() {
@@ -187,4 +176,5 @@ function download_supp_files() {
 	find "$output_dir" -type f -name '*.xml.tgz' -exec rm {} \;
 	echo "Removed gzipped XML files"
 }
+
 
