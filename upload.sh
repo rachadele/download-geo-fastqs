@@ -9,9 +9,9 @@ trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 
 
 read -erp "Enter GEO accession: " GSE
-read -erp "Enter your username: " username
+read -erp "Enter the path to your hca-util virtual environment: " path
 
-source /hive/users/$username/envs/hca-util-env/bin/activate
+source $path/bin/activate
 hca-util create $GSE
 echo "enter upload area uuid"
 read uuid
