@@ -57,7 +57,7 @@ For a full list of options and additional details, consult the script's built-in
 
 The upload-geo-fastqs.sh script is used to upload data to the HCA data repository. It prompts you to enter necessary information. Here's how to use it:
 
-Create a Virtual hca-util Environment: Before running the upload script, you must create a virtual hca-util environment using virutalenv (this script does not accept conda environments). If you would like to use a conda environment or not use an environment at all, the commands within the upload.sh script can be run on the command line manually.
+Create a Virtual ```hca-util``` Environment: Before running the upload script, you must create a virtual hca-util environment using virutalenv (this script does not accept conda environments). If you would like to use a conda environment or not use an environment at all, the commands within the upload.sh script can be run on the command line manually.
 
 Run the script:
 
