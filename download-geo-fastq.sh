@@ -1,7 +1,9 @@
 #!/bin/bash
 
-#sra-to-hca.sh
+#download-geo-fastqs.sh
 #This script takes GSE accessions as command line arguments and processes them accordingly for submission to the hca-util bucket
+#the file rename options for this script work for single-cell data generated using either 10x or SS2 library strategies. 
+#The script can download fastqs for both bulk-and single-cell data without the rename flag
 #Options for processing include skipping FASTQ files and only donwloading supplemental files, converting FASTQs from bam, and renaming files based on library preparation strategy
 
 #Source utility functions
