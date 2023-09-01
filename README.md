@@ -28,9 +28,9 @@ chmod +x download-geo-fastqs.sh
 ## Downloading data
 The download-geo-fastqs.sh script can be used with various options to control its behavior. Below are some common use cases:
 
-Downloading FASTQ files for a specific GEO accession (e.g., GSE12345):
+Downloading FASTQ files for a list of GSE accessions (e.g., GSE1, GSE2, GSE3, etc):
 ```
-./download-geo-fastqs.sh GSE12345
+./download-geo-fastqs.sh GSE1 GSE2 GSE3
 ```
 
 Downloading FASTQ files and renaming them based on library preparation strategy (e.g., "10x" or "ss2"):
@@ -51,6 +51,14 @@ Skipping FASTQ file download and downloading only GEO supplemental files (e.g. C
 For a full list of options and additional details, consult the script's built-in help message:
 ```
 ./download-geo-fastqs.sh -h
+```
+
+It is important to understand that only one rename option can be passed per list of GEO accessions, so if file renaming is desired all GEO accessions must have been prepared using the same library strategy (either 10x or SS2). For lists of GSEs with differing library strategies, please rename the files using the rename functions directly:
+
+```
+source download-geo-fastq/utils/utils.sh
+rename_10x GSE1
+rename_SS2 GSE2
 ```
 
 ## Uploading Data (upload-geo-fastqs.sh)
