@@ -61,7 +61,7 @@ function check_fastq_downloads() {
             missing_srrs="$missing_srrs $srr"
         fi
     done
-	echo "$missing_srrs"
+	  echo "$missing_srrs"
 }
 
 function rename_10x() {
