@@ -75,27 +75,6 @@ function check_fastq_downloads() {
     fi
 }
 
-function download_missing_srrs() {
-	#need this to be a separate function from initial download bc sra can't handle feeding srrs back into initial donwload loop
-	#reasons not entirely clear not me
-	local GSE="$1"
-	shift
-	local accessions=("$@")
-	for line in "${accessions[@]}"; do
-		~/sratoolkit.2.11.0-ubuntu64/bin/prefetch "$line" --max-size 900GB -O "/hive/data/outside/geo/$GSE" &> "/hive/data/outside/geo/$GSE/$line.log"
-		echo "Prefetched SRA file for $line"
-
-		# Download and gzip FASTQs
-		~/sratoolkit.2.11.0-ubuntu64/bin/fasterq-dump "$line" --include-technical -S -t "/hive/data/outside/geo/$GSE/$line" -O "/hive/data/outside/geo/$GSE/$line" &>> "/hive/data/outside/geo/$GSE/$line.log"
-		gzip "/hive/data/outside/geo/$GSE/$line"/*fastq* &>> "/hive/data/outside/geo/$GSE/$line/$line.log"
-		echo "FASTQs downloaded and gzipped for $line"
-
-		rm -r "/hive/data/outside/geo/$GSE"/*/*sra
-		echo "Removed SRA files for $line"
-	 done
-
-}
-
 function rename_10x() {
    echo "test"
    local GSE="$1"
