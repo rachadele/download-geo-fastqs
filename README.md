@@ -38,9 +38,9 @@ Downloading FASTQ files and renaming them based on library preparation strategy 
 ./download-geo-fastqs.sh -r 10x GSE12345
 ```
 
-Processing BAM files and renaming them based on library preparation strategy:
+Downloading BAM files and converting them to FASTQ format:
 ```
-./download-geo-fastqs.sh -b -r ss2 GSE12345
+./download-geo-fastqs.sh -b GSE12345
 ```
 
 Skipping FASTQ file download and downloading only GEO supplemental files (e.g. Cellranger output or .rds files):
