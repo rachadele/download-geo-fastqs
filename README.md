@@ -1,5 +1,5 @@
 # Download GEO FASTQs for HCA Submission
-This repository contains a Bash script (download-geo-fastqs.sh) designed to simplify the process of downloading data from Gene Expression Omnibus (GEO) submissions and preparing them for submission to the Human Cell Atlas (HCA) data repository. The script supports various options for downloading and processing data, making it a versatile tool for researchers working with single-cell RNA sequencing (scRNA-seq) data generated using 10x or Smart-Seq2 (SS2) library strategies. Additionally, it will download all supplemental files associated with the given GEO series and subseries.
+This repository contains a Bash script (download-geo-fastqs.sh) designed to simplify the process of downloading data from Gene Expression Omnibus (GEO) submissions and preparing them for submission to the Human Cell Atlas (HCA) data repository. The script supports various options for downloading and processing data, making it a versatile tool for researchers working with single-cell RNA sequencing (scRNA-seq) data generated using 10x or Smart-Seq2 (SS2) library strategies. Additionally, it will automatically download all supplemental files associated with the given GEO series and subseries.
 
 ## Prerequisites
 Before using this script, ensure you have the following prerequisites installed on your system:
