@@ -53,7 +53,7 @@ For a full list of options and additional details, consult the script's built-in
 ./download-geo-fastqs.sh -h
 ```
 
-It is important to understand that only one rename option can be passed per list of GEO accessions, so if file renaming is desired all GEO accessions must have been prepared using the same library strategy (either 10x or SS2). For lists of GSEs with differing library strategies, please rename the files using the rename functions directly:
+It is important to understand that only one rename option can be passed per list of GEO accessions. If file renaming is desired, all GEO accessions must have been prepared using the same library strategy (either 10x or SS2). Alternatively, for lists of GSEs with differing library strategies, please rename the files using the rename functions directly:
 
 ```
 source download-geo-fastq/utils/utils.sh
