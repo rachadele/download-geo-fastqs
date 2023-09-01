@@ -33,7 +33,7 @@ Downloading FASTQ files for a list of GSE accessions (e.g., GSE1, GSE2, GSE3, et
 ./download-geo-fastqs.sh GSE1 GSE2 GSE3
 ```
 
-Downloading FASTQ files and renaming them based on library preparation strategy (e.g., "10x" or "ss2"):
+Downloading FASTQ files and renaming them based on library preparation strategy (either "10x" or "ss2"):
 ```
 ./download-geo-fastqs.sh -r 10x GSE12345
 ```
@@ -60,6 +60,8 @@ source download-geo-fastq/utils/utils.sh
 rename_10x GSE1
 rename_SS2 GSE2
 ```
+
+FASTQs may be downloaded for any set of GEO accessions with publicly available data hosted by SRA, regardless of library preparation strategy. Do not use the -r option if data was not prepared using 10x or Smart-Seq.
 
 ## Uploading Data (upload-geo-fastqs.sh)
 
