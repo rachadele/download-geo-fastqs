@@ -25,7 +25,7 @@ Make the script executable:
 chmod +x download-geo-fastqs.sh
 ```
 
-## Usage
+## Downloading data
 The download-geo-fastqs.sh script can be used with various options to control its behavior. Below are some common use cases:
 
 Downloading FASTQ files for a specific GEO accession (e.g., GSE12345):
@@ -52,6 +52,22 @@ For a full list of options and additional details, consult the script's built-in
 ```
 ./download-geo-fastqs.sh -h
 ```
+
+## Uploading Data (upload-geo-fastqs.sh)
+
+The upload-geo-fastqs.sh script is used to upload data to the HCA data repository. It prompts you to enter necessary information. Here's how to use it:
+
+Create a Virtual hca-util Environment: Before running the upload script, you must create a virtual hca-util environment using virutalenv (this script does not accept conda environments). If you would like to use a conda environment or not use an environment at all, the commands within the upload.sh script can be run on the command line manually.
+
+Run the script:
+
+bash
+```
+./upload-geo-fastqs.sh
+```
+Enter the requested information, such as GEO accession, the path to your virtualenv, upload area UUID, and submission UUID.
+
+The script will activate the HCA utilities environment, create an HCA submission, upload the data to the specified upload area, and then sync the files from the upload area to the submission.
 
 Contributing
 Contributions to this project are welcome! If you encounter issues or have ideas for improvements, please open an issue or submit a pull request.
