@@ -65,19 +65,20 @@ function check_fastq_downloads() {
 }
 
 function rename_10x() {
-   echo "test"
    local GSE="$1"
 	for file_path in "/hive/data/outside/geo/$GSE/"SRR[0-9]*/*.fastq.gz; do
-		echo $file_path
+		local -A read_lengths=()
 		if [ -f "$file_path" ]; then
 			local read_length=$(zcat "$file_path" | head -n 2 | tail -n 1 | awk '{print length($0)}')
 			local base_name=$(basename "$file_path" .fastq.gz)
-			base_name="${base_name%%_[0-9]*}"
+			base_name="${base_name%%_*}"
+			
 			if [[ $(zcat "$file_path" | head -n 4 | sed -n '2p' | grep -o 'A\{100,\}') ]]; then	
 				echo "found polyA tail, assuming technical barcode read 1"
 				new_name="${base_name}_R1.fastq.gz"
+			
 			else
-	   			if [[ $read_length -eq 8 ]]; then
+				if [[ $read_length -eq 8 ]]; then
         			new_name="${base_name}_I1.fastq.gz"
     			elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
         			new_name="${base_name}_R1.fastq.gz"
@@ -87,11 +88,16 @@ function rename_10x() {
         			echo "Unknown read length for file: $file_path"
         			continue
     			fi
+				if [[ ${read_lengths[$read_length]} ]]; then	
+					echo "Duplicate read length found: $read_length"
+					exit 1
+				fi
+				read_lengths["$read_length"]=1 # Store read length in the associative array
 			fi
 			mv "$file_path" "$(dirname "$file_path")/$new_name"
 		else 
 			echo "file path not found"
-		fi
+	fi
 	done
 }
 
