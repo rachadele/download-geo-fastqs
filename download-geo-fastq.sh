@@ -7,7 +7,7 @@
 #Options for processing include skipping FASTQ files and only donwloading supplemental files, converting FASTQs from bam, and renaming files based on library preparation strategy
 
 #Source utility functions
-source ~/bin/sra-to-hca/utils/utils.sh
+source ~/bin/download-geo-fastqs/utils/utils.sh
 
 #Functions to execute utities given command line args
 
@@ -17,7 +17,7 @@ function process_fastqs() {
 		echo "Failed to download MINiML file for GSE accession: $GSE"
 		exit 1
 	fi
-	acc=$(get_srr_accessions $GSE | grep SRR[0-9])
+	acc=$(get_srr_accessions $GSE)
 	export -f download_fastqs
  	echo "downloading FASTQs for $GSE"
 	parallel -j4 download_fastqs $GSE ::: ${acc[@]}
@@ -36,7 +36,7 @@ function process_fastqs() {
 
 function process_bams() {
 	GSE=$1
-	acc=$(get_srr_accessions $GSE | grep SRR[0-9])
+	acc=$(get_srr_accessions $GSE)
 	export -f download_bams
 	parallel -j4 download_bams $GSE ::: ${acc}
 	rename_bams $GSE
