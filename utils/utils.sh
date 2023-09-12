@@ -20,8 +20,9 @@ function download_miniml_file() {
 
 function get_srr_accessions() {
     local GSE=$1
+
  	local srx_accessions=$(grep -oP '(?<=term=)[A-Za-z0-9]+' "${GSE}_family.xml")
-   	local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}')
+   	local srr_accessions=$(echo "$srx_accessions" | xargs -n 1 pysradb srx-to-srr | tail -n +2 | grep -v "run_accession" | awk '{print $2}' | tr ' ' '\n' | sort -u)
     echo $srr_accessions
     #return srr accessions
 }
@@ -52,8 +53,8 @@ function download_fastqs() {
 
 function check_fastq_downloads() {
     local GSE=$1
-    local result=$(get_srr_accessions "$GSE")
-    local expected_srrs=$(echo $result | grep -o 'SRR[0-9]\+')
+    local expected_srrs=$(get_srr_accessions "$GSE")
+    #local expected_srrs=$(echo $result | grep -o 'SRR[0-9]\+')
     local output_dir="/hive/data/outside/geo/$GSE" 
     local missing_srrs=""
     for srr in $expected_srrs; do
@@ -61,7 +62,7 @@ function check_fastq_downloads() {
             missing_srrs="$missing_srrs $srr"
         fi
     done
-	  echo "$missing_srrs"
+	echo "$missing_srrs"
 }
 
 function rename_10x() {
@@ -79,7 +80,7 @@ function rename_10x() {
 			
 			else
 				if [[ $read_length -eq 8 ]]; then
-        			new_name="${base_name}_I1.fastq.gz"
+        				new_name="${base_name}_I1.fastq.gz"
     			elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
         			new_name="${base_name}_R1.fastq.gz"
     			elif [[ $read_length -ge 90 ]]; then
@@ -88,12 +89,14 @@ function rename_10x() {
         			echo "Unknown read length for file: $file_path"
         			continue
     			fi
-				if [[ ${read_lengths[$read_length]} ]]; then	
-					echo "Duplicate read length found: $read_length"
-					exit 1
-				fi
-				read_lengths["$read_length"]=1 # Store read length in the associative array
 			fi
+			
+			if [[ ${read_lengths[$read_length]} ]]; then	
+				echo "Duplicate read length found: $read_length"
+				continue
+			
+			fi	
+			read_lengths["$read_length"]=1
 			mv "$file_path" "$(dirname "$file_path")/$new_name"
 		else 
 			echo "file path not found"
@@ -176,8 +179,8 @@ function download_supp_files() {
 	for miniml_file in "$output_dir"/*.xml; do
 		urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' "$miniml_file"))
 		for url in "${urls[@]}"; do
-			wget -P "$output_dir" "$url"
-		done			
+			wget --no-check-certificate -P "$output_dir" "$url"
+		done
 	done
 	find "$output_dir" -type f -name '*.xml.tgz' -exec rm {} \;
 	echo "Removed gzipped XML files"

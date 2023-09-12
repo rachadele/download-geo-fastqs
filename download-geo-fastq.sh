@@ -7,7 +7,10 @@
 #Options for processing include skipping FASTQ files and only donwloading supplemental files, converting FASTQs from bam, and renaming files based on library preparation strategy
 
 #Source utility functions
-source ~/bin/download-geo-fastqs/utils/utils.sh
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export USER_UTILS_PATH="$script_dir"
+
+source "$script_dir/utils/utils.sh"
 
 #Functions to execute utities given command line args
 
@@ -80,15 +83,16 @@ function main() {
 	    exit 1
 	fi
 	if [ "$process_bam" -eq 1 ]; then skip_fastq=1; rename_mode=""; fi #if bam argument passed, process_bams will convert bam files to fastq, so no need to run process_fastqs
+	if [ "$skip_fastq" -eq 1 ]; then rename_mode=""; fi
 	for GSE in "${GSEs[@]}"; do
 		if [ "$skip_fastq" -eq 0 ]; then
 			process_fastqs "$GSE"
 		fi
   		#rename fastqs according to library method if applicable
-  		if [ "$rename_mode"="10x" ]; then
+  		if [ "$rename_mode" = "10x" ]; then
      			rename_10x $GSE
 		fi
-		if [ "$rename_mode"="ss2" ]; then
+		if [ "$rename_mode" = "ss2" ]; then
      			rename_SS2 $GSE
 		fi
   		#process bams instead of FASTQs
