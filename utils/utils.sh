@@ -67,20 +67,20 @@ function check_fastq_downloads() {
 
 function rename_10x() {
    local GSE="$1"
-	for file_path in "/hive/data/outside/geo/$GSE/"SRR[0-9]*/*.fastq.gz; do
-		local -A read_lengths=()
+   for directory in "/hive/data/outside/geo/$GSE/"SRR[0-9]*/; do
+   read_lengths=()
+	for file_path in "$directory"*.fastq.gz; do
 		if [ -f "$file_path" ]; then
 			local read_length=$(zcat "$file_path" | head -n 2 | tail -n 1 | awk '{print length($0)}')
 			local base_name=$(basename "$file_path" .fastq.gz)
 			base_name="${base_name%%_*}"
-			
 			if [[ $(zcat "$file_path" | head -n 4 | sed -n '2p' | grep -o 'A\{100,\}') ]]; then	
 				echo "found polyA tail, assuming technical barcode read 1"
 				new_name="${base_name}_R1.fastq.gz"
 			
 			else
 				if [[ $read_length -eq 8 ]]; then
-        				new_name="${base_name}_I1.fastq.gz"
+       				new_name="${base_name}_I1.fastq.gz"
     			elif [[ $read_length -eq 26 || $read_length -eq 28 ]]; then
         			new_name="${base_name}_R1.fastq.gz"
     			elif [[ $read_length -ge 90 ]]; then
@@ -90,17 +90,19 @@ function rename_10x() {
         			continue
     			fi
 			fi
-			
 			if [[ ${read_lengths[$read_length]} ]]; then	
 				echo "Duplicate read length found: $read_length"
 				continue
 			
 			fi	
-			read_lengths["$read_length"]=1
+			
+			read_lengths+=("$read_length")
 			mv "$file_path" "$(dirname "$file_path")/$new_name"
+
 		else 
 			echo "file path not found"
 	fi
+	done
 	done
 }
 
@@ -179,6 +181,7 @@ function download_supp_files() {
 	for miniml_file in "$output_dir"/*.xml; do
 		urls=($(awk -F'[<>]' '/<Supplementary-Data type=".*">/ {getline; if ($0 ~ /series/) print}' "$miniml_file"))
 		for url in "${urls[@]}"; do
+			#wget -P "$output_dir" "$url"
 			wget --no-check-certificate -P "$output_dir" "$url"
 		done
 	done
