@@ -26,7 +26,7 @@ function process_fastqs() {
 	parallel -j4 download_fastqs $GSE ::: ${acc[@]}
  
  	while true; do
-		local missing_srrs=$(check_fastq_downloads GSE165577)
+		local missing_srrs=$(check_fastq_downloads $GSE)
  		if [[ -z "$missing_srrs" ]]; then
   			echo "All fastqs for GSE $GSE have been downloaded."
     			break
