@@ -130,15 +130,16 @@ function download_bams() {
     local bam_dir="/hive/data/outside/geo/$GSE/$SRR/$SRR"
     aws s3 sync s3://sra-pub-src-2/$SRR/ $output_dir;
     aws s3 sync s3://sra-pub-src-1/$SRR/ $output_dir;
-    ~rachelschwartz/bamtofastq_linux *bam* $bam_dir
+    ~rachelschwartz/bamtofastq_linux "$output_dir/"*bam* $bam_dir
 }
 
 function rename_bams() {
     local GSE=$1
-    local output_dir="/hive/data/outside/geo/$GSE"
+    local output_dir="/hive/data/outside/geo/"$GSE
     echo "renaming files"
-    for i in $(find $output_dir/SRR*/SRR*/* -type d); do
-        cd $i; f=$(echo $i | sed -E s,SRR.{9},, | sed s,/,_,); ls | while read line; do mv $line $(echo $line | sed "s,bamtofastq,$f,"); done; cd ../../../; done
+    for i in $(find "$output_dir"/SRR*/SRR*/* -type d); do
+        cd $i; f=$(echo $i | sed -E s,SRR.{8},, | sed s,/,_, | sed s,_hive,/hive,)
+	ls | while read line; do mv $line $(echo $line | sed "s,bamtofastq,$f,"); done; cd ../../../; done
     echo "file rename complete"
 }
 
