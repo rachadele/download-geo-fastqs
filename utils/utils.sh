@@ -130,7 +130,7 @@ function download_bams() {
     local bam_dir="/hive/data/outside/geo/$GSE/$SRR/$SRR"
     aws s3 sync s3://sra-pub-src-2/$SRR/ $output_dir;
     aws s3 sync s3://sra-pub-src-1/$SRR/ $output_dir;
-    ~rachelschwartz/bamtofastq_linux "$output_dir/"*bam* $bam_dir
+    ~rachelschwartz/bamtofastq_linux "$output_dir/"*bam* --reads-per-fastq=5000000000 $bam_dir
 }
 
 function rename_bams() {
