@@ -7,7 +7,7 @@ Before using this script, ensure you have the following prerequisites installed 
 - **GNU Parallel**: Required for parallel processing of SRA data downloads.
 - **Bash**: The script is written in Bash and requires it to run.
 - **Git**: Needed for version control.
-- **HCA-utils**: Required for certain data processing steps.
+- **HCA-utils**: Required to sync data to ingest.
 - **SRA Toolkit**: Required to download SRA raw data. See 'SRA_toolkit_setup_example.README' for instructions.
 
 ## Getting Started
