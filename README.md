@@ -8,7 +8,7 @@ Before using this script, ensure you have the following prerequisites installed 
 - **Bash**: The script is written in Bash and requires it to run.
 - **Git**: Needed for version control.
 - **HCA-utils**: Required for certain data processing steps.
-- **SRA Toolkit**: Required to download SRA raw data. See 'SRA toolkit setup' for instructions.
+- **SRA Toolkit**: Required to download SRA raw data. See 'SRA_toolkit_setup_example.README' for instructions.
 
 ## Getting Started
 Clone this repository to your local machine:
