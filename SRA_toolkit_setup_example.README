@@ -1,0 +1,27 @@
+#!/usr/bin/env bash 
+#setting up SRA toolkit
+
+
+#install latest SRA toolkit in your home directory
+cd ~
+wget --output-document sratoolkit.tar.gz http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz
+tar -vxzf sratoolkit.tar.gz
+
+#configure toolkit using:
+~/sratoolkit.2.10.8-ubuntu64/bin/vdb-config --report-cloud-identity yes
+echo "Aexyo" | sratoolkit*-ubuntu64/bin/vdb-config -i
+
+#test kit functionality:
+echo "testing toolkit functionality" 
+~/sratoolkit.2.10.8-ubuntu64/bin/fastq-dump --stdout SRR390728 | head -n 8
+
+#should output this:
+#@SRR390728.1 1 length=72
+#CATTCTTCACGTAGTTCTCGAGCCTTGGTTTTCAGCGATGGAGAATGACTTTGACAAGCTGAGAGAAGNTNC
+#+SRR390728.1 1 length=72
+#;;;;;;;;;;;;;;;;;;;;;;;;;;;9;;665142;;;;;;;;;;;;;;;;;;;;;;;;;;;;;96&&&&(
+#@SRR390728.2 2 length=72
+#AAGTAGGTCTCGTCTGTGTTTTCTACGAGCTTGTGTTCCAGCTGACCCACTCCCTGGGTGGGGGGACTGGGT
+#+SRR390728.2 2 length=72
+#;;;;;;;;;;;;;;;;;4;;;;3;393.1+4&&5&&;;;;;;;;;;;;;;;;;;;;;<9;<;;;;;464262
+#fastq-dump was killed (signal 13)
