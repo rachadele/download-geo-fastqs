@@ -81,7 +81,7 @@ The script will activate the HCA utilities environment, create an HCA submission
 
 ## Acknowledgments
 
-Scripts in this repo were written with the helo of ChatGPT (version 3.5).
+Scripts in this repo were written with the help of ChatGPT (version 3.5).
 
 
 
