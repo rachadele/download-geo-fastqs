@@ -79,10 +79,9 @@ Enter the requested information, such as GEO accession, the path to your virtual
 
 The script will activate the HCA utilities environment, create an HCA submission, upload the data to the specified upload area, and then sync the files from the upload area to the submission.
 
-Contributing
-Contributions to this project are welcome! If you encounter issues or have ideas for improvements, please open an issue or submit a pull request.
+##Acknowledgments
 
-
+Scripts in this repo were written with the helo of ChatGPT (version 3.5).
 
 
 
