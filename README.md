@@ -14,11 +14,11 @@ Before using this script, ensure you have the following prerequisites installed 
 Clone this repository to your local machine:
 
 ```
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/rachadele/download-geo-fastqs.git
 ```
 Navigate to the repository directory:
 ```
-cd your-repository
+cd download-geo-fastqs
 ```
 
 Make the script executable:
